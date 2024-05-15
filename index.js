@@ -79,21 +79,47 @@ asterisk.on('devicestatechange', function (evt) {
     } else {
         discoveryTopic = createDiscoveryTopic("sensor",uID); 
     }
-    mqtt_client.publish(discoveryTopic,config,{ qos: 1, retain: true });
-    mqtt_client.publish(topic, evt.state, { qos: 1, retain: true });
+    mqtt_client.publish(discoveryTopic,config);
+    mqtt_client.publish(topic, evt.state);
 });
+
+asterisk.on('newstate', function (evt) {
+    console.log(JSON.stringify(evt));
+    let ext = evt.exten;
+    let cont = evt.context;
+    let data = {
+        calleridnum: evt.calleridnum,
+        calleridname: evt.calleridname
+    }
+    let topic = 'pbx/ring/' + cont + '/' + ext;
+    if (evt.channelstate == "4") {
+        mqtt_client.publish(topic, JSON.stringify(data));
+    }
+});
+
+
+
 
 asterisk.on('extensionstatus', function (evt) {
     console.log(JSON.stringify(evt));
     let ext = evt.exten;
     let cont = evt.context;
     let topic = 'pbx/exten/' + cont + '/' + ext;
-    mqtt_client.publish(topic, evt.status, { qos: 1, retain: true });
+    mqtt_client.publish(topic, evt.status);
 });
 
-asterisk.on('managerevent', function (evt) {
-    console.log(JSON.stringify(evt));
-});
+
+
+
+
+
+
+
+
+
+// asterisk.on('managerevent', function (evt) {
+//     console.log(JSON.stringify(evt));
+// });
 
 mqtt_client.on('message', function (topic, message) {
     newState = message.toString();
